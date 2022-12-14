@@ -18,27 +18,7 @@ normal=$( tput sgr 0 );
 Supressor=$(> /dev/null 2>&1);
 UIDCheck=$(awk -F: '($3 == "0") {print}' /etc/passwd);
 
-printf "$red\nWelcome to SecureLinuxToAD - Debian\n"
-printf "This script is automated steps to enroll Debian Servers to Active Directory Environment and harden the linux.\n1) Just Enroll to AD\n2)Just Harden Linux\n3) Do Both"
-echo "Your Option:"
-read Options
-
-case $Options in
-1)
-    LinuxToAD()
-;;
-2)
-    linuxHardening()
-;;
-3)
-    LinuxToAD()
-    linuxHardening()
-;;
-*)
-    echo "Stick to the given options..."
-;;
-esac
-
+# Functions
 function LinuxToAD() {
 
 echo 'Enter your domain Name:'
@@ -74,7 +54,7 @@ systemctl restart sssd
 
 }
 
-function linuxHardening(){
+function LinuxHardening(){
     # Remove all unsecure packages
     print"$red\nRemoving all unncessary packages..."
     apt-get --purge remove xinetd nis yp-tools tftpd atftpd tftpd-hpa telnetd rsh-server rsh-redone-server $Supressor
@@ -141,3 +121,24 @@ function linuxHardening(){
         usermod -L -f 60 $user
     done
 }
+
+printf "$red\nWelcome to SecureLinuxToAD - Debian\n"
+printf "This script is automated steps to enroll Debian Servers to Active Directory Environment and harden the linux.\n1) Just Enroll to AD\n2)Just Harden Linux\n3) Do Both"
+echo "Your Option:"
+read Options
+
+case $Options in
+1)
+    LinuxToAD()
+;;
+2)
+    LinuxHardening()
+;;
+3)
+    LinuxToAD()
+    LinuxHardening()
+;;
+*)
+    echo "Stick to the given options..."
+;;
+esac
