@@ -2,8 +2,8 @@
 : '
     Author:         n4t5ru
     Email:          hello@nasru.me
-    Version:        1.0
-    Created:        11/DEC/2022
+    Version:        1.2
+    Created:        17/DEC/2022
     ScriptName:     SecureLinuxToAD-Debian
     Description:    Automated the steps taken to enroll Debian Servers to Active Directory Environment and harden the linux
     How To:         Run the script as Root
@@ -15,7 +15,6 @@ green=$( tput setaf 2 );
 normal=$( tput sgr 0 );
 
 # Global Variables
-Supressor=$(> /dev/null 2>&1);
 UIDCheck=$(awk -F: '($3 == "0") {print}' /etc/passwd);
 
 # Functions
@@ -34,7 +33,7 @@ echo 'You will be prompted to enter domain admin password in a bit....'
 hostnamectl set-hostname $hostName.$domainName
 
 #install the initial required tools
-apt-get install -y realmd libnss-sss libpam-sss sssd sssd-tools adcli samba-common-bin oddjob oddjob-mkhomedir packagekit $Supressor
+apt-get install -y realmd libnss-sss libpam-sss sssd sssd-tools adcli samba-common-bin oddjob oddjob-mkhomedir packagekit > /dev/null 2>&1
 
 #join the doiman
 realm join -v -U $domanAdmin $domainName
@@ -57,11 +56,11 @@ systemctl restart sssd
 function LinuxHardening(){
     # Remove all unsecure packages
     print"$red\nRemoving all unncessary packages..."
-    apt-get --purge remove xinetd nis yp-tools tftpd atftpd tftpd-hpa telnetd rsh-server rsh-redone-server $Supressor
+    apt-get --purge remove xinetd nis yp-tools tftpd atftpd tftpd-hpa telnetd rsh-server rsh-redone-server > /dev/null 2>&1
 
     # Update and Upgrade
     print"$red\nUpdating and Upgrade in Progress..."
-    apt-get update && apt-get upgrade -y $Supressor
+    apt-get update && apt-get upgrade -y > /dev/null 2>&1
 
     # Check passwd
     if [$UIDCheck == 'root:x:0:0:root:/root:/bin/bash'] 
@@ -72,19 +71,13 @@ function LinuxHardening(){
     fi
 
     # Install secure Applications
-    apt-get install ufw fail2ban logwatch
+    apt-get install ufw logwatch
 
     # Configure a firewall
     ufw enable
     ufw default deny incoming
     ufw default allow outgoing
     ufw allow ssh
-
-    # Configure fail2ban
-    cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-    sed -i 's/destemail = root@localhost/destemail = your@email.com/' /etc/fail2ban/jail.local
-    sed -i 's/action = %(action_)s/action = %(action_mw)s/' /etc/fail2ban/jail.local
-    service fail2ban restart
 
     # Configure logwatch
     echo 'detail = Low' >> /etc/logwatch/conf/logwatch.conf
@@ -128,15 +121,11 @@ echo "Your Option:"
 read Options
 
 case $Options in
-1)
-    LinuxToAD()
-;;
-2)
-    LinuxHardening()
-;;
+1) LinuxToAD ;;
+2) LinuxHardening ;;
 3)
-    LinuxToAD()
-    LinuxHardening()
+    LinuxToAD
+    LinuxHardening
 ;;
 *)
     echo "Stick to the given options..."
